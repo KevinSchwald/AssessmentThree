@@ -21,8 +21,13 @@ class StartView : View("EarthQuakeApp") {
             alignment = Pos.CENTER
             button("Start") {
                 action {
-                    replaceWith<TableView>()
-                    updateList()
+                    try {
+                        updateList()
+                    } catch (e: Exception) {
+                        label("Error")
+                    } finally {
+                        replaceWith<TableView>()
+                    }
                 }
             }
         }
@@ -37,7 +42,7 @@ class TableView : View("EarthQuakeApp") {
                 hbox {
                     alignment = Pos.CENTER
                     label {
-                        bind(Bindings.concat("Number of Earthquakes: ", Bindings.size(earthquakes)))
+                        bind(Bindings.concat("Number of earthquakes: ", Bindings.size(earthquakes)))
                     }
                 }
                 hbox {
@@ -48,17 +53,6 @@ class TableView : View("EarthQuakeApp") {
                     datepicker(date) {
                         value = LocalDate.now()
                         setOnAction { urlQuery = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${date.value.atStartOfDay()}&endtime=${"${date.value}T23:59"}&limit=20000" }
-                    }
-                }
-                hbox {
-                    alignment = Pos.CENTER
-                    label {
-                        text = "Pick a location: "
-                    }
-                    textfield {
-                        println(text)
-                        //Not working atm
-                        setOnAction { earthquakes.filter { properties -> properties.state == text } }
                     }
                 }
             }

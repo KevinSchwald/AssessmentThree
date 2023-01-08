@@ -59,6 +59,7 @@ data class Properties(
  * @property type = "Feature"
  * @property properties
  * @constructor Create empty Feature
+ *
  */
 @Serializable
 data class Feature(
@@ -72,6 +73,7 @@ data class Feature(
  * @property type = "FeatureCollection"
  * @property features - Array of earthquake events
  * @constructor Create empty Feature collection
+ *
  */
 @Serializable
 data class FeatureCollection(
@@ -97,24 +99,53 @@ data class FeatureCollection(
     }
 }
 
+/**
+ *
+ * A function which gets the earthquake date via an API call.
+ * The query for the API call is passed as an argument.
+ * The retrieved data is returned as an FeatureCollection which itself is a serializable data class.
+ *
+ */
 fun getEarthQuakes(url: String): FeatureCollection {
-    val jsonString = URL(url).readText()
-    val json = Json { ignoreUnknownKeys = true }
-    return json.decodeFromString<FeatureCollection>(jsonString)
-}
-
-fun createEarthQuakeList(url: String = urlQuery) {
-    earthquakes.asyncItems {
-        getEarthQuakes(url).features.map {
-            it.properties
-        }
+    return try {
+        val jsonString = URL(url).readText()
+        val json = Json { ignoreUnknownKeys = true }
+        json.decodeFromString<FeatureCollection>(jsonString)
+    } catch (e: Exception) {
+        FeatureCollection("Error", arrayOf(Feature("Error", Properties(0.0, "Error",0, "Error","Error"))))
     }
 }
 
-fun updateList() {
-    Timer().scheduleAtFixedRate( object : TimerTask() {
-        override fun run() {
-            createEarthQuakeList()
+/**
+ *
+ *This function calls the getEarthQuakes function and maps the retrieved data asynchronously.
+ *
+ */
+fun createEarthQuakeList(url: String = urlQuery) {
+    try {
+        earthquakes.asyncItems {
+            getEarthQuakes(url).features.map {
+                it.properties
+            }
         }
-    }, 0, 5000)
+    } catch (e: Exception) {
+        println(e)
+    }
+}
+
+/**
+ *
+ * This Function calls the createEarthQuakeList function after 5s to get new Data in fixed time frames.
+ *
+ */
+fun updateList() {
+    try {
+        Timer().scheduleAtFixedRate( object : TimerTask() {
+            override fun run() {
+                createEarthQuakeList()
+            }
+        }, 0, 5000)
+    } catch (e: Exception) {
+        println(e)
+    }
 }
